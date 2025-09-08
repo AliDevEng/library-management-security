@@ -20,14 +20,20 @@ public class User {
     @Column(name = "last_name")
     private String lastName;
 
-    @Column(name = "email", unique = true)
+    @Column(name = "email", unique = true, nullable = false)
     private String email;
 
-    @Column(name = "password")
+    @Column(name = "password", nullable = false)
     private String password;
 
-    @Column(name = "registration_date")
+    @Column(name = "registration_date", nullable = false)
     private LocalDate registrationDate;
+
+    @Column(name = "role", nullable = false)
+    private String role;
+
+    @Column(name = "enabled", nullable = false)
+    private Boolean enabled = true;
 
     // Tom konstruktor som Spring kräver
     public User() {
@@ -76,6 +82,22 @@ public class User {
 
     public LocalDate getRegistrationDate() {
         return registrationDate;
+    }
+
+    public Boolean getEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(Boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 
     public void setRegistrationDate(LocalDate registrationDate) {
