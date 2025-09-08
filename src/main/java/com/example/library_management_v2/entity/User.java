@@ -103,4 +103,8 @@ public class User {
     public void setRegistrationDate(LocalDate registrationDate) {
         this.registrationDate = registrationDate;
     }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
 }
