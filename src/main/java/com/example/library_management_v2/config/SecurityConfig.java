@@ -31,11 +31,32 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/books/**").hasRole("USER")
+                        // Tillåt alla att komma åt startsidan och publika resurser
+                        .requestMatchers("/", "/home", "/public/**").permitAll()
+
+                        // ADMIN område
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/users/**").hasRole("ADMIN")
+                        .requestMatchers("/authors/**").hasRole("ADMIN")
+
+                        // USER område
+                        .requestMatchers("/books/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/loans/**").hasAnyRole("USER", "ADMIN")
+
+                        // Alla andra requests kräver autentisering
                         .anyRequest().authenticated()
                 )
-                .httpBasic(Customizer.withDefaults())
-                .csrf(csrf -> csrf.disable());
+                .formLogin(Customizer.withDefaults())
+
+                // Logout-funktionalitet
+                .logout(logout -> logout
+                        .logoutSuccessUrl("/")
+                        .permitAll()
+                )
+
+        // Ta bort CSRF-disable för nu - vi vill ha CSRF-skydd
+        // .csrf(csrf -> csrf.disable()); // KOMMENTERAD BORT
+        ;
 
         return http.build();
     }

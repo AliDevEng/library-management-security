@@ -31,6 +31,7 @@ public class DataInitService {
         if (userRepository.findByEmail("admin@test.com").isEmpty()) {
             User admin = new User();
             admin.setEmail("admin@test.com");
+            // passwordEncoder krypterar lösenordet och sparar den
             admin.setPassword(passwordEncoder.encode("admin123"));
             admin.setRole("ADMIN");
             admin.setEnabled(true);
