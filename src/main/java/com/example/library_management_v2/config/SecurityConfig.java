@@ -34,12 +34,15 @@ public class SecurityConfig {
                         // Tillåt alla att komma åt startsidan och publika resurser
                         .requestMatchers("/", "/home", "/public/**").permitAll()
 
+                        // Registrering tillgänglig för icke-authentiserade användare
+                        .requestMatchers("/register", "users/register").permitAll()
+
                         // ADMIN område
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/users/**").hasRole("ADMIN")
                         .requestMatchers("/authors/**").hasRole("ADMIN")
 
-                        // USER område
+                        // USER och ADMIN område
                         .requestMatchers("/books/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/loans/**").hasAnyRole("USER", "ADMIN")
 

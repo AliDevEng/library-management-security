@@ -4,6 +4,11 @@ package com.example.library_management_v2.entity;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
+import org.hibernate.annotations.CreationTimestamp;
+import jakarta.persistence.PrePersist;
 
 @Entity
 @Table(name = "users")
@@ -27,7 +32,15 @@ public class User {
     private String password;
 
     @Column(name = "registration_date", nullable = false)
-    private LocalDate registrationDate;
+    private String registrationDate;
+
+    public String getRegistrationDate() {
+        return registrationDate;
+    }
+
+    public void setRegistrationDate(String registrationDate) {
+        this.registrationDate = registrationDate;
+    }
 
     @Column(name = "role", nullable = false)
     private String role;
@@ -39,7 +52,7 @@ public class User {
     public User() {
     }
 
-    public User(Long id, String firstName, String lastName, String email, String password, LocalDate registrationDate, String role, Boolean enabled) {
+    public User(Long id, String firstName, String lastName, String email, String password, String registrationDate, String role, Boolean enabled) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -91,9 +104,9 @@ public class User {
         this.password = password;
     }
 
-    public LocalDate getRegistrationDate() {
-        return registrationDate;
-    }
+    // public LocalDateTime getRegistrationDate() {
+        // return registrationDate;
+    // }
 
     public Boolean getEnabled() {
         return enabled;
@@ -111,9 +124,9 @@ public class User {
         this.role = role;
     }
 
-    public void setRegistrationDate(LocalDate registrationDate) {
-        this.registrationDate = registrationDate;
-    }
+    // public void setRegistrationDate(String registrationDate) {
+        // this.registrationDate = registrationDate;
+    // }
 
     public boolean isEnabled() {
         return enabled;

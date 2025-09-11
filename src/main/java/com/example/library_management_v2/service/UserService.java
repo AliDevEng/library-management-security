@@ -11,6 +11,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Service
 public class UserService {
@@ -67,10 +69,10 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(createUserDTO.getPassword()));
 
         // Sätt registreringsdatum till dagens datum
-        user.setRegistrationDate(LocalDate.now());
+        user.setRegistrationDate(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 
         // Nya användare ska få automatisk USER-roll
-        user.setRole("USER");
+        user.setRole("ROLE_USER");
 
         // Aktivera användaren direkt efter registrering
         user.setEnabled(true);

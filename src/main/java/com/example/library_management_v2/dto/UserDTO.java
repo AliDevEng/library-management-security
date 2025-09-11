@@ -1,6 +1,7 @@
 package com.example.library_management_v2.dto;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class UserDTO {
 
@@ -8,7 +9,8 @@ public class UserDTO {
     private String firstName;
     private String LastName;
     private String email;
-    private LocalDate registrationDate;
+    private String registrationDate;
+
 
     // En tom konstruktor som Spring kräver
     public UserDTO() {
@@ -47,11 +49,19 @@ public class UserDTO {
         this.email = email;
     }
 
-    public LocalDate getRegistrationDate() {
+    // public LocalDateTime getRegistrationDate() {
+      //  return registrationDate;
+    // }
+
+    // public void setRegistrationDate(LocalDateTime registrationDate) {
+       // this.registrationDate = registrationDate;
+    // }
+
+    public String getRegistrationDate() {
         return registrationDate;
     }
 
-    public void setRegistrationDate(LocalDate registrationDate) {
+    public void setRegistrationDate(String registrationDate) {
         this.registrationDate = registrationDate;
     }
 }
