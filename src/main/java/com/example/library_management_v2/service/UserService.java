@@ -7,6 +7,7 @@ import com.example.library_management_v2.exception.DuplicateUserException;
 import com.example.library_management_v2.exception.UserNotFoundException;
 import com.example.library_management_v2.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -16,6 +17,9 @@ public class UserService {
 
     @Autowired
     public UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
 
     public UserDTO getUserByEmail (String email) {
@@ -58,15 +62,20 @@ public class UserService {
         user.setLastName(createUserDTO.getLastName());
         user.setEmail(createUserDTO.getEmail());
 
-        // Här skulle vi normalt sätt hasha lösenordet innan vi sparar det
-        // För enklare implementation sparar vi det som plain text, men i en riktig applikation
-        // bör lösenord aldrig lagras i klartext
-        user.setPassword(createUserDTO.getPassword());
+        // KRITISKT: Kryptera lösenordet innan sparande
+        // Lösenordet går från klartext till BCrypt hash här
+        user.setPassword(passwordEncoder.encode(createUserDTO.getPassword()));
 
         // Sätt registreringsdatum till dagens datum
         user.setRegistrationDate(LocalDate.now());
 
-        // Spara användaren
+        // Nya användare ska få automatisk USER-roll
+        user.setRole("USER");
+
+        // Aktivera användaren direkt efter registrering
+        user.setEnabled(true);
+
+        // Spara användaren med krypterat lösenord
         User savedUser = userRepository.save(user);
 
         // Returnera den skapade användaren som DTO (utan lösenord)
