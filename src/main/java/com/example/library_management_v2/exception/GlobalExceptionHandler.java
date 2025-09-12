@@ -2,6 +2,8 @@
 package com.example.library_management_v2.exception;
 
 import jakarta.persistence.EntityNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -9,8 +11,10 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 // Global exception handler för hela applikationen
 @ControllerAdvice
@@ -20,7 +24,7 @@ public class GlobalExceptionHandler {
      // Hanterar valideringsfel för @Valid annoterade parametrar
      // ResponseEntity med valideringsfel och statuskod 400 (Bad Request)
 
-
+    /*
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Object> handleValidationExceptions(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
@@ -33,6 +37,61 @@ public class GlobalExceptionHandler {
 
         return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
+    */
+
+    // Logger för säkerhetshändelser
+    private static final Logger securityLogger = LoggerFactory.getLogger("SECURITY");
+    private static final Logger applicationLogger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+
+    // Skapar ett säkert felmeddelande med spårnings-ID
+    private Map<String, Object> createSecureErrorResponse(String userMessage, String logMessage, HttpStatus status) {
+        String errorId = UUID.randomUUID().toString().substring(0, 8);
+
+        // Logga detaljerad information för utvecklare/admin
+        applicationLogger.error("Error ID {}: {}", errorId, logMessage);
+
+        // Returnera endast säker information till användaren
+        Map<String, Object> response = new HashMap<>();
+        response.put("error", userMessage);
+        response.put("errorId", errorId);
+        response.put("timestamp", LocalDateTime.now());
+        response.put("status", status.value());
+
+        return response;
+    }
+
+
+     // Hanterar valideringsfel för @Valid annoterade parametrar
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Object> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        // Vi skapar en tom Map för att samla fel
+        Map<String, String> validationErrors = new HashMap<>();
+
+        ex.getBindingResult().getAllErrors().forEach((error) -> {
+
+            // fieldName = vilket fält som hade fel (t.ex. "password")
+            String fieldName = ((FieldError) error).getField();
+
+            // errorMessage = vad som var fel (t.ex. "Lösenordet måste vara minst 8 tecken")
+            String errorMessage = error.getDefaultMessage();
+
+            // put() = lägg detta fel i vår Map
+            validationErrors.put(fieldName, errorMessage);
+        });
+
+        // Logga valideringsfel för säkerhetsanalys
+        securityLogger.warn("Validation failed for fields: {}", validationErrors.keySet());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("error", "Valideringsfel i indata");
+        response.put("validationErrors", validationErrors);
+        response.put("timestamp", LocalDateTime.now());
+
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
 
 
     /**

@@ -23,6 +23,9 @@ public class UserService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private SecurityLoggingService securityLoggingService;
+
 
     public UserDTO getUserByEmail (String email) {
         User user = userRepository.findByEmail(email)
@@ -51,36 +54,42 @@ public class UserService {
 
     // Skapa en ny användare
     public UserDTO createUser(CreateUserDTO createUserDTO) {
+        try {
+            // Kontroll om användaren redan finns
+            if (userRepository.findByEmail(createUserDTO.getEmail()).isPresent()) {
+                // Logga dubblettregistreringsförsök
+                securityLoggingService.logSecurityIncident("DUPLICATE_REGISTRATION",
+                        "Attempt to register existing email: " + createUserDTO.getEmail());
 
-        // Kontroll om användaren redan finns
-        if (userRepository.findByEmail(createUserDTO.getEmail()).isPresent()) {
-            throw new DuplicateUserException
-                    ("En användare med e-postadressen " + createUserDTO.getEmail() + " finns redan");
+                throw new DuplicateUserException
+                        ("En användare med e-postadressen " + createUserDTO.getEmail() + " finns redan");
+            }
+
+            // Skapa ny användarentitet
+            User user = new User();
+            user.setFirstName(createUserDTO.getFirstName());
+            user.setLastName(createUserDTO.getLastName());
+            user.setEmail(createUserDTO.getEmail());
+            user.setPassword(passwordEncoder.encode(createUserDTO.getPassword()));
+            user.setRegistrationDate(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+            user.setRole("ROLE_USER");
+            user.setEnabled(true);
+
+            // Spara användaren
+            User savedUser = userRepository.save(user);
+
+            // SÄKERHETSLOGGNING: Logga lyckad registrering
+            securityLoggingService.logUserRegistration(createUserDTO.getEmail());
+            securityLoggingService.logDataChange("User", "CREATE", createUserDTO.getEmail());
+
+            return convertToDTO(savedUser);
+
+        } catch (DuplicateUserException e) {
+            throw e;
+        } catch (Exception e) {
+            securityLoggingService.logSecurityIncident("REGISTRATION_ERROR",
+                    "Unexpected error during registration for: " + createUserDTO.getEmail());
+            throw new RuntimeException("Ett fel inträffade vid registrering", e);
         }
-
-        // Skapa ny användarentitet
-        User user = new User();
-        user.setFirstName(createUserDTO.getFirstName());
-        user.setLastName(createUserDTO.getLastName());
-        user.setEmail(createUserDTO.getEmail());
-
-        // KRITISKT: Kryptera lösenordet innan sparande
-        // Lösenordet går från klartext till BCrypt hash här
-        user.setPassword(passwordEncoder.encode(createUserDTO.getPassword()));
-
-        // Sätt registreringsdatum till dagens datum
-        user.setRegistrationDate(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-
-        // Nya användare ska få automatisk USER-roll
-        user.setRole("ROLE_USER");
-
-        // Aktivera användaren direkt efter registrering
-        user.setEnabled(true);
-
-        // Spara användaren med krypterat lösenord
-        User savedUser = userRepository.save(user);
-
-        // Returnera den skapade användaren som DTO (utan lösenord)
-        return convertToDTO(savedUser);
     }
 }
