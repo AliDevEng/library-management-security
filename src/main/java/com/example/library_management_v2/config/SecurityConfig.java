@@ -1,5 +1,8 @@
 package com.example.library_management_v2.config;
 
+import com.example.library_management_v2.config.AuthenticationEventHandlers.CustomAuthenticationFailureHandler;
+import com.example.library_management_v2.config.AuthenticationEventHandlers.CustomAuthenticationSuccessHandler;
+import com.example.library_management_v2.config.AuthenticationEventHandlers.CustomLogoutSuccessHandler;
 import com.example.library_management_v2.service.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -11,8 +14,6 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-//import org.springframework.security.core.userdetails.UserDetailsService;
-
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -26,6 +27,16 @@ public class SecurityConfig {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private CustomAuthenticationSuccessHandler authenticationSuccessHandler;
+
+    @Autowired
+    private CustomAuthenticationFailureHandler authenticationFailureHandler;
+
+    @Autowired
+    private CustomLogoutSuccessHandler logoutSuccessHandler;
+
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -49,16 +60,19 @@ public class SecurityConfig {
                         // Alla andra requests kräver autentisering
                         .anyRequest().authenticated()
                 )
-                .formLogin(Customizer.withDefaults())
-
-                // Logout-funktionalitet
+                // UTÖKAD: Formlogin med anpassade handlers för säkerhetsloggning
+                .formLogin(form -> form
+                        .successHandler(authenticationSuccessHandler)
+                        .failureHandler(authenticationFailureHandler)
+                        .permitAll()
+                )
+                // UTÖKAD: Logout med anpassad handler för säkerhetsloggning
                 .logout(logout -> logout
-                        .logoutSuccessUrl("/")
+                        .logoutSuccessHandler(logoutSuccessHandler)
                         .permitAll()
                 )
 
-        // Ta bort CSRF-disable för nu - vi vill ha CSRF-skydd
-        // .csrf(csrf -> csrf.disable()); // KOMMENTERAD BORT
+        // CSRF-skydd är aktiverat (inget .disable())
         ;
 
         return http.build();
